@@ -25,8 +25,8 @@ import os
 #-------------------------------------------------
 
 #----------- details -----------------------------
-sender_mail_id = '09e80z@gmail.com'
-sender_app_password = 'qpqltegidfzwuixm'
+sender_mail_id = 'mail@gmail.com'
+sender_app_password = 'password'
 msg_body = """"""
 msg_subject = """"""
 recievers = []
@@ -120,7 +120,7 @@ def send_emails():
     #--------------------------------------------
     try:
         for i in recievers:
-            smtp.sendmail(from_addr="09e80z@gmail.com",to_addrs=[i], msg=msg.as_string())
+            smtp.sendmail(from_addr="mailid1@gmail.com",to_addrs=[i], msg=msg.as_string())
             writer_obj.insert(INSERT, str(i)+" at time : "+str(datetime.now())+"\n")
             print(" email sent to : ", i," at time : "+str(datetime.now()))
             print()

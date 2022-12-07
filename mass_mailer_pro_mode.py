@@ -23,11 +23,11 @@ import os
 #-------------------------------------------------
 
 #----------- details -----------------------------
-sender_mail_id = '09e80z@gmail.com'
-sender_app_password = 'qpqltegidfzwuixm'
+sender_mail_id = 'mail_id@gmail.com'
+sender_app_password = 'password'
 msg_body = """"""
 msg_subject = """"""
-recievers_from_box = ["dksreddy1729@gmail.com","1729dksr@gmail.com"]
+recievers_from_box = ["mail1@gmail.com","mail2@gmail.com"]
 recievers_from_file = []
 recievers = recievers_from_box + recievers_from_file
 writer_obj = None
@@ -127,7 +127,7 @@ def send_emails():
     log_file.write(session_summary)
     #--------------------------------------------
     try:
-        smtp.sendmail(from_addr="09e80z@gmail.com",to_addrs=recievers, msg=msg.as_string())
+        smtp.sendmail(from_addr="mailid@gmail.com",to_addrs=recievers, msg=msg.as_string())
         print(" email sent for all", recievers)
         writer_obj.insert(INSERT, str("".join(ele+"\n" for ele in recievers))+" at time : "+str(datetime.now())+"\n")
     except smtplib.SMTPSenderRefused:
