@@ -3,12 +3,15 @@
 # CSE CYBER SECURITY AND BLOCKCHAIN TECHNOLOGY
 # COMPUTER NETWORKS PROJECT 
 # PROJECT NAME : MASS MAILER USING SMTP AND MIME
-# Main file
+# Slow Mode
 
 # ------------- required libraries --------------
 from fileinput import filename
 from smtplib import SMTP
 from csv import reader,writer
+from tkinter import INSERT
+import time
+import smtplib
 from re import match
 from datetime import date, datetime
 from email.mime.text import MIMEText
@@ -16,6 +19,7 @@ from email.mime.image import MIMEImage
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from csv import reader
+from datetime import datetime
 import time
 import os
 #-------------------------------------------------
@@ -26,12 +30,13 @@ sender_app_password = 'qpqltegidfzwuixm'
 msg_body = """"""
 msg_subject = """"""
 recievers = []
+writer_obj = None
 #------------------------------------------------
 
 #----------- global initiation of connections ---
 smtp,msg=None,None
 def init_connection():
-    global smtp,msg,msg_body,msg_subject,sender_mail_id,sender_app_password
+    global smtp,msg,msg_body,msg_subject,sender_mail_id,sender_app_password,writer_obj
     try:
         smtp = SMTP('smtp.gmail.com', 587,timeout=(len(recievers)*15 + 20))
         smtp.ehlo()
@@ -54,7 +59,7 @@ def check_mail_id(mail_id):
     else:
         return False
 
-def decide_recievers(filename):
+def decide_recievers(filename = None):
     global recievers
     with open("attach_csv_address.txt") as file:
         filename = file.read()
@@ -66,14 +71,13 @@ def decide_recievers(filename):
             for lines in csvFile:
                     for ele in lines:
                         to.append(ele)
-    with open("mail_recievers.py",'a') as csvfile:
-            csvwriter  = writer(csvfile)
-            for ele in to:
-                csvwriter.writerow(ele)
-                csvwriter.writerow(",")
-    with open("mail_recievers.py") as file:
+    print("to : ", to)
+    with open("mail_recievers.txt") as file:
         recievers = file.read().split(",")
-    
+    recievers += to
+    recievers = list(set(recievers))
+    print("recievers : ",recievers)
+   
 
 def filter_recievers_list():
     global recievers
@@ -107,7 +111,7 @@ def attach_files():
 #-------------------------------------------------
 
 def send_emails():
-    global sender_mail_id,sender_app_password,recievers,smtp,msg
+    global sender_mail_id,sender_app_password,recievers,smtp,msg,writer_obj
     #-----------log data creation----------------
     time_stamp = str(datetime.now())
     session_summary = time_stamp + "\n" + str(msg) + "\n" + str(recievers) + "\n" + sender_mail_id + "\n"
@@ -117,26 +121,42 @@ def send_emails():
     try:
         for i in recievers:
             smtp.sendmail(from_addr="09e80z@gmail.com",to_addrs=[i], msg=msg.as_string())
-            print(" email sent to : ", i)
+            writer_obj.insert(INSERT, str(i)+" at time : "+str(datetime.now())+"\n")
+            print(" email sent to : ", i," at time : "+str(datetime.now()))
+            print()
             time.sleep(7)
+    except smtplib.SMTPSenderRefused:
+            print("[ERROR] SMTP Sender Refused: ", end = "")
+            return 1
+    except smtplib.SMTPDataError:
+        print("[ERROR] SMTP Data Error: ", end = "")
+        return 2
+    except smtplib.SMTPAuthenticationError:
+        print("[ERROR] SMTP Authentication Error: ", end = "")
+        return 3
+    except smtplib.SMTPServerDisconnected:
+        print("[ERROR] SMTP Server Disconnected: ", end = "")
+        return 4
     except:
-        print("no internet")
+        print("might be no internet")
+        return 5
     return    
 
 #----------- main code ---------------------------
 
-def slow_mode_send_mails(filename=None):
-    global sender_mail_id,sender_app_password,msg_subject,msg_body,recievers
+def slow_mode_send_mails(filename=None,writer = None):
+    global sender_mail_id,sender_app_password,msg_subject,msg_body,recievers,writer_obj
+    writer_obj = writer
+    writer_obj.insert(INSERT, "mails sent : \n")
     decide_recievers(filename)
-    print(recievers)
-    print("starting mass mailer pro mode")
-    print("validating emails")
+    print("starting mass mailer slow mode")
     with open("mail_data.csv", 'r') as csvf:
         data = csvf.read().split(",")
     sender_mail_id,sender_app_password,msg_subject,msg_body = data[0], data[1], data[2], data[3]
     filter_recievers_list()
     init_connection()
     send_emails()
-    exit()
+    time.sleep(10)
+    return
 
 # -------------------------------------------------------

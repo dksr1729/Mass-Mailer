@@ -3,13 +3,16 @@
 # CSE CYBER SECURITY AND BLOCKCHAIN TECHNOLOGY
 # COMPUTER NETWORKS PROJECT 
 # PROJECT NAME : MASS MAILER USING SMTP AND MIME
-# Main file
+# Pro mode
 
 # ------------- required libraries --------------
 from fileinput import filename
 from csv import reader,writer
 from smtplib import SMTP
+import smtplib
 from re import match
+from tkinter import INSERT
+import time
 from datetime import date, datetime
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -27,8 +30,10 @@ msg_subject = """"""
 recievers_from_box = ["dksreddy1729@gmail.com","1729dksr@gmail.com"]
 recievers_from_file = []
 recievers = recievers_from_box + recievers_from_file
+writer_obj = None
 #------------------------------------------------
-def decide_recievers(filename):
+
+def decide_recievers(filename = None):
     global recievers
     with open("attach_csv_address.txt") as file:
         filename = file.read()
@@ -40,14 +45,12 @@ def decide_recievers(filename):
             for lines in csvFile:
                     for ele in lines:
                         to.append(ele)
-    with open("mail_recievers.py",'a') as csvfile:
-            csvwriter  = writer(csvfile)
-            for ele in to:
-                csvwriter.writerow(ele)
-                csvwriter.writerow(",")
-    with open("mail_recievers.py") as file:
+    with open("mail_recievers.txt") as file:
         recievers = file.read().split(",")
-
+    recievers += to
+    recievers = list(set(recievers))
+    print("recievers : ",recievers)
+ 
 #----------- global initiation of connections ---
 smtp,msg=None,None
 def init_connection():
@@ -116,7 +119,7 @@ def attach_files():
 #-------------------------------------------------
 
 def send_emails():
-    global sender_mail_id,sender_app_password,recievers,smtp,msg
+    global sender_mail_id,sender_app_password,recievers,smtp,msg,writer_obj
     #-----------log data creation----------------
     time_stamp = str(datetime.now())
     session_summary = time_stamp + "\n" + str(msg) + "\n" + str(recievers) + "\n" + sender_mail_id + "\n"
@@ -126,18 +129,31 @@ def send_emails():
     try:
         smtp.sendmail(from_addr="09e80z@gmail.com",to_addrs=recievers, msg=msg.as_string())
         print(" email sent for all", recievers)
+        writer_obj.insert(INSERT, str("".join(ele+"\n" for ele in recievers))+" at time : "+str(datetime.now())+"\n")
+    except smtplib.SMTPSenderRefused:
+            print("[ERROR] SMTP Sender Refused: ", end = "")
+            return 1
+    except smtplib.SMTPDataError:
+        print("[ERROR] SMTP Data Error: ", end = "")
+        return 2
+    except smtplib.SMTPAuthenticationError:
+        print("[ERROR] SMTP Authentication Error: ", end = "")
+        return 3
+    except smtplib.SMTPServerDisconnected:
+        print("[ERROR] SMTP Server Disconnected: ", end = "")
+        return 4
     except:
-        print("no internet")
+        print("might be no internet")
+        return 5
     return    
 
 #----------- main code ---------------------------
-
-def pro_mode_send_mails(filename=None):
-    global sender_mail_id,sender_app_password,msg_subject,msg_body,recievers
+def pro_mode_send_mails(filename=None,writer = None):
+    # call all the prerequisite functions , filters recievers , lists
+    global sender_mail_id,sender_app_password,msg_subject,msg_body,recievers,writer_obj
+    writer_obj = writer
     decide_recievers(filename)
-    print(recievers)
     print("starting mass mailer pro mode")
-    print("validating emails")
     with open("mail_data.csv", 'r') as csvf:
         data = csvf.read().split(",")
     sender_mail_id,sender_app_password,msg_subject,msg_body = data[0], data[1], data[2], data[3]
@@ -145,6 +161,6 @@ def pro_mode_send_mails(filename=None):
     init_connection()
     send_emails()
     smtp.quit()
-    exit()
-
+    time.sleep(5)
+    return
 # -------------------------------------------------------
